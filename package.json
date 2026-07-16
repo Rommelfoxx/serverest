@@ -7,8 +7,8 @@
     "db": "node scripts/init_db.js",
     "cypress:run": "cypress run",
     "cypress:open": "cypress open",
-    "cypress:api": "cypress run --spec 'cypress/e2e/API/'",
-    "cypress:e2e": "cypress run --spec 'cypress/e2e/UI/'"
+    "cypress:api": "cypress run --spec 'cypress/e2e/api/**/*.feature'",
+    "cypress:e2e": "cypress run --spec 'cypress/e2e/ui/**/*.feature'"
   },
   "keywords": [],
   "author": "",
