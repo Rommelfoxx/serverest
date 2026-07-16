@@ -8,7 +8,9 @@
     "cypress:run": "cypress run",
     "cypress:open": "cypress open",
     "cypress:api": "cypress run --spec 'cypress/e2e/api/**/*.feature'",
-    "cypress:e2e": "cypress run --spec 'cypress/e2e/ui/**/*.feature'"
+    "cypress:e2e": "cypress run --spec 'cypress/e2e/ui/**/*.feature'",
+    "report:merge": "mochawesome-merge cypress/reports/mocha/.jsons/*.json > cypress/reports/mocha/merged.json",
+    "report:generate": "marge cypress/reports/mocha/merged.json -o cypress/reports/html"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +20,10 @@
     "@badeball/cypress-cucumber-preprocessor": "^26.0.0",
     "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
     "cypress": "^15.18.1",
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "mochawesome": "^7.1.4",
+    "mochawesome-merge": "^5.1.1",
+    "mochawesome-report-generator": "^6.3.2"
   },
   "cypress-cucumber-preprocessor": {
     "stepDefinitions": [

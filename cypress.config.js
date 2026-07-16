@@ -14,6 +14,13 @@ async function setupNodeEvents(on, config) {
 }
 
 module.exports = defineConfig({
+  reporter: 'mochawesome',
+  reporterOptions: {
+    reportDir: 'cypress/reports/mocha/.jsons',
+    overwrite: false,
+    html: false,
+    json: true,
+  },
   e2e: {
     specPattern: 'cypress/e2e/**/*.feature',
     setupNodeEvents,

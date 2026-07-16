@@ -1,2 +1,6 @@
 /CLAUDE.md
 /node_modules
+/cypress/reports
+/cypress/screenshots
+/cypress/videos
+/cypress/downloads
