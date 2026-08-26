@@ -1,15 +1,13 @@
-const createUser = (overrides = {}) => {
-    const timestamp = Date.now()
+import { faker } from "@faker-js/faker";
 
+const createUser = (overrides = {}) => {
     return {
-        nome: `usuario_teste_${timestamp}`,
-        email: `usuario_teste_${timestamp}@gmail.com`,
-        password: 'teste123',
-        administrador: 'false',
+        name: faker.person.firstName(),
+        email: faker.internet.email(),
+        password: faker.internet.password(),
         ...overrides
     }
 }
-
 export default {
     createUser
 };

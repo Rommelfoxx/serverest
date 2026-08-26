@@ -12,7 +12,6 @@
 //     And clica no bottão Entrar
 //     Then somos direcionados para home com perfil ADM
 
-import { AfterAll } from "@badeball/cypress-cucumber-preprocessor";
 
 //   Scenario Outline: Logar na aplicação com usuario incorreto
 //     Given que possua um usuario "vanderlan" senha "teste123" e email "van@gmail.com" se é administrador "true" cadastrado

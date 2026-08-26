@@ -4,7 +4,7 @@
 
 // Given que o usuario "vanderlan" nao tenha sido criado anteriormente
 // And esteja na tela de cadastro
-// When preenche usuario "vanderlan" email "vanderlan@ig.com" e senha "teste2"
+// When preenche usuario "vanderlan" email "vanderlan@ig.com" e password "teste2"
 // And clica no bottão Cadastrar
 // Then usuario "vanderlan" é criado com sucesso 
 // And somos direcionados para home 
@@ -28,7 +28,7 @@ describe('User Sign-up and Login', () => {
     const user = {
         name: 'vanderlan',
         email: 'vanderlan@ig.com',
-        senha: 'teste2'
+        password: 'teste2'
     }
     // Given que o usuario "vanderlan" nao tenha sido criado anteriormente
     // And esteja na tela de cadastro
@@ -42,7 +42,7 @@ describe('User Sign-up and Login', () => {
         //Sign-up User
         cy.get('[data-testid="nome"').should('exist').type(user.name)
         cy.get('[data-testid="email"').should('exist').type(user.email)
-        cy.get('[data-testid="password"').should('exist').type(user.senha)
+        cy.get('[data-testid="password"').should('exist').type(user.password)
         //And clica no bottão Cadastrar
         cy.intercept('POST', 'https://serverest.dev/login').as('login')
         cy.get('[data-testid="cadastrar"').should('be.visible').click()
@@ -82,13 +82,13 @@ describe('User Sign-up and Login', () => {
     });
     it('should display signup name error ', () => {
         cy.get('[data-testid="email"').should('exist').type(user.email)
-        cy.get('[data-testid="password"').should('exist').type(user.senha)
+        cy.get('[data-testid="password"').should('exist').type(user.password)
         cy.get('[data-testid="cadastrar"').should('be.visible').click()
         cy.contains("Nome é obrigatório").should('be.exist')
     });
     it('should display signup email error', () => {
         cy.get('[data-testid="nome"').should('exist').type(user.name)
-        cy.get('[data-testid="password"').should('exist').type(user.senha)
+        cy.get('[data-testid="password"').should('exist').type(user.password)
         cy.get('[data-testid="cadastrar"').should('be.visible').click()
         cy.contains("Email é obrigatório").should('be.exist')
     });
