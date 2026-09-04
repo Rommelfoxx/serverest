@@ -1,23 +1,41 @@
 import { faker } from "@faker-js/faker";
+import { createUser } from '../../factories/userFactory.js'
 
 const apiUrl = Cypress.env('apiUrl')
-const name = faker.person.fullName()
-const email = faker.internet.email()
-const password = faker.internet.password()
+
+
+
 describe('api usuarios tests GET', () => {
-    //   Scenario: Listar usuários com sucesso
-    //     When realizo uma requisição GET para listar os usuarios
-    //     Then o status da resposta deve ser 200
-    //     And a resposta deve conter a lista de usuarios
-    it('Listar usuários com sucesso', () => {
+    const user = createUser()
+
+    let userId
+
+    it('List users', () => {
         cy.request({
             method: 'GET',
             url: `${apiUrl}/usuarios`
         }).then((response) => {
-            expect(response.status).to.eq(200)
-            expect(response.body.usuarios).to.be.an('array')
-            expect(response.body.quantidade).to.be.a('number')
-            expect(response.body.usuarios[0]).to.include.all.keys('nome', 'email', 'password', 'administrador', '_id')
+
+            const { usuarios, quantidade } = response.body
+
+            expect(response.status)
+                .to.eq(200)
+
+            expect(usuarios)
+                .to.be.an('array')
+                .and.not.be.empty
+
+            expect(quantidade)
+                .to.be.a('number')
+                .to.eq(usuarios.length)
+
+            expect(usuarios[0])
+                .to.include.all.keys(
+                    'nome',
+                    'email',
+                    'password',
+                    'administrador',
+                    '_id')
         })
     })
     //   Scenario: Buscar usuário por ID com sucesso
@@ -26,104 +44,145 @@ describe('api usuarios tests GET', () => {
     //     Then o status da resposta deve ser 200
     //     And o usuario retornado deve ter o mesmo email do usuario cadastrado
 
-    it('Successfully retrieve user by ID', () => {
+    it('Retrieve user by ID', () => {
+        cy.criarUsuario(user)
+            .then((response) => {
 
-        let id
-        cy.criarUsuario(name, password, email, 'false').then((response) => {
-            id = response.body._id
+                userId = response.body._id
 
-            return cy.request({
-                method: 'GET',
-                url: `${apiUrl}/usuarios`,
-                qs: { _id: id }
-            }).then((response) => {
-                const user = response.body.usuarios[0]
-                expect(response.status).to.eq(200)
-                expect(user).to.include({
-                    nome: name,
-                    email: email,
-                    password: password,
-                    administrador: 'false'
+                cy.request({
+                    method: 'GET',
+                    url: `${apiUrl}/usuarios`,
+                    qs: {
+                        _id: userId
+                    }
+                }).then((response) => {
+
+                    const userResponse =
+                        response.body.usuarios[0]
+
+                    expect(response.status)
+                        .to.eq(200)
+
+                    expect(response.body.quantidade)
+                        .to.eq(1)
+
+                    expect(response.body.usuarios)
+                        .to.have.length(1)
+
+                    expect(userResponse._id)
+                        .to.eq(userId)
+
+                    expect(userResponse)
+                        .to.include({
+                            nome: user.name,
+                            email: user.email,
+                            password: user.password,
+                            administrador: user.administrator
+                        })
                 })
             })
-        })
     });
     //   Scenario: Buscar usuário com ID inexistente
     //     When realizo uma requisição GET para buscar o usuario com o id "idInexistente123"
-    //     Then o status da resposta deve ser 400
+    //     Then o status da resposta deve ser 200
     //     And a mensagem da resposta deve ser "Usuário não encontrado"
-    it('Search for a user with a non-existent ID', () => {
+    it('Returns no users for an unknown ID', () => {
+
         cy.request({
             method: 'GET',
             url: `${apiUrl}/usuarios`,
-            qs: { _id: '2335rgtfgfhgf' }
+            qs: {
+                _id: '2335rgtfgfhgf'
+            }
         }).then((response) => {
-            expect(response.status).to.eq(200)
-            expect(response.body).to.property('quantidade', 0)
-            expect(response.body).to.property('usuarios')
+
+            expect(response.status)
+                .to.eq(200)
+
+            expect(response.body)
+                .to.property('quantidade', 0)
+
+            expect(response.body.usuarios)
+                .to.be.an('array')
+                .and.have.length(0)
         })
     })
     after(() => {
-        cy.apagarUsuario(name)
+        if (userId) {
+            cy.deleteUserById(userId)
+        }
     })
 })
-describe('api usuarios tests POST', () => {
+describe('Users API POST', () => {
     //   Scenario: Cadastrar usuário com sucesso
     //     Given que eu tenha os dados de um novo usuario
     //     When realizo uma requisição POST para cadastrar o usuario
     //     Then o status da resposta deve ser 201
     //     And a mensagem da resposta deve ser "Cadastro realizado com sucesso"
+    let user
+
+    beforeEach(() => {
+        user = createUser()
+    })
+
     it('Create a new user', () => {
+
         cy.request({
             method: 'POST',
             url: `${apiUrl}/usuarios`,
             body: {
-                "nome": `${name}`,
-                "email": `${email}`,
-                "password": `${password}`,
-                "administrador": "false"
+                nome: user.name,
+                email: user.email,
+                password: user.password,
+                administrador: user.administrator
             }
-        }).then((response) => {
-            expect(response.status).to.eq(201)
-            expect(response.body).to.property("message", "Cadastro realizado com sucesso")
-            expect(response.body).to.property("_id")
-            cy.apagarUsuario(name)
         })
+            .then((response) => {
+
+                expect(response.status)
+                    .to.eq(201)
+
+                expect(response.body)
+                    .to.have.property(
+                        "message",
+                        "Cadastro realizado com sucesso"
+                    )
+
+                expect(response.body._id)
+                    .to.be.a("string")
+                    .and.not.be.empty
+            })
     })
     //   Scenario: Não deve cadastrar usuário com email já utilizado
     //     Given que exista um usuario cadastrado
     //     When realizo uma requisição POST para cadastrar outro usuario com o mesmo email
     //     Then o status da resposta deve ser 400
     //     And a mensagem da resposta deve ser "Este email já está sendo usado"
-    it('Do not register a user with an email that is already in use', () => {
+    it('rejects an email that is already registered', () => {
+        cy.criarUsuario(user)
+
         cy.request({
             method: 'POST',
             url: `${apiUrl}/usuarios`,
             body: {
-                "nome": `${name}`,
-                "email": `${email}`,
-                "password": `${password}`,
-                "administrador": "false"
-            }
+                nome: user.name,
+                email: user.email,
+                password: user.password,
+                administrador: user.administrator
+            },
+            failOnStatusCode: false
         }).then((response) => {
-            expect(response.status).to.eq(201)
-            expect(response.body).to.property("message", "Cadastro realizado com sucesso")
-            expect(response.body).to.property("_id")
-            cy.request({
-                method: 'POST',
-                url: `${apiUrl}/usuarios`,
-                body: {
-                    "nome": `${name}`,
-                    "email": `${email}`,
-                    "password": `${password}`,
-                    "administrador": "false"
-                },
-                failOnStatusCode: false
-            }).then((response2) => {
-                expect(response2.status).to.eq(400)
-                expect(response2.body).to.property("message", "Este email já está sendo usado")
-            })
-            cy.apagarUsuario(name)
+
+            expect(response.status)
+                .to.eq(400)
+
+            expect(response.body)
+                .to.have.property(
+                    "message",
+                    "Este email já está sendo usado"
+                )
+
         })
     })
 
@@ -138,70 +197,59 @@ describe('api usuarios tests POST', () => {
     //       | email         | email é obrigatório         |
     //       | password      | password é obrigatório      |
     //       | administrador | administrador é obrigatório |
+    const mandatoryFields = [
+        {
+            field: 'nome',
+            message: 'nome é obrigatório'
+        },
+        {
+            field: 'email',
+            message: 'email é obrigatório'
+        },
+        {
+            field: 'password',
+            message: 'password é obrigatório'
+        },
+        {
+            field: 'administrador',
+            message: 'administrador é obrigatório'
+        }
+    ]
+    mandatoryFields.forEach(({ field, message }) => {
 
-    it('A user should not be registered if a mandatory field is missing', () => {
-        //without administrador 
-        cy.request({
-            method: 'POST',
-            url: `${apiUrl}/usuarios`,
-            failOnStatusCode: false,
-            body: {
-                "nome": `${name}`,
-                "email": `${email}`,
-                "password": `${password}`,
-            }
-        }).then((response) => {
-            expect(response.status).to.eq(400)
-            expect(response.body).to.property('administrador', 'administrador é obrigatório')
-        })
-        //without name 
-        cy.request({
-            method: 'POST',
-            url: `${apiUrl}/usuarios`,
-            failOnStatusCode: false,
-            body: {
-                "email": `${email}`,
-                "password": `${password}`,
-                "administrador": "true"
-            }
-        }).then((response) => {
-            expect(response.status).to.eq(400)
-            expect(response.body).to.property('nome', 'nome é obrigatório')
-        })
-        //without password 
-        cy.request({
-            method: 'POST',
-            url: `${apiUrl}/usuarios`,
-            failOnStatusCode: false,
-            body: {
-                "nome": `${name}`,
-                "email": `${email}`,
-                "administrador": "true"
-            }
-        }).then((response) => {
-            expect(response.status).to.eq(400)
-            expect(response.body).to.property('password', 'password é obrigatório')
-        })
 
-        //without email 
-        cy.request({
-            method: 'POST',
-            url: `${apiUrl}/usuarios`,
-            failOnStatusCode: false,
-            body: {
-                "nome": `${name}`,
-                "password": `${password}`,
-                "administrador": "true"
+        it(`rejects registration when ${field} is missing`, () => {
+
+            const payload = {
+                nome: user.name,
+                email: user.email,
+                password: user.password,
+                administrador: user.administrator
             }
-        }).then((response) => {
-            expect(response.status).to.eq(400)
-            expect(response.body).to.property('email', 'email é obrigatório')
+            delete payload[field]
+
+            cy.request({
+                method: 'POST',
+                url: `${apiUrl}/usuarios`,
+                failOnStatusCode: false,
+                body: payload
+            }).then((response) => {
+
+                expect(response.status)
+                    .to.eq(400)
+
+                expect(response.body)
+                    .to.have.property(
+                        field,
+                        message
+                    )
+            })
         })
     })
-
-    after(() => {
-        cy.apagarUsuario(name)
+    afterEach(() => {
+        cy.apagarUsuario(user.name)
     })
+
 })
 //   Scenario: Editar usuário com sucesso
 //     Given que exista um usuario cadastrado
@@ -211,24 +259,69 @@ describe('api usuarios tests POST', () => {
 
 describe('api usuarios tests PUT', () => {
 
-    it('Successfully delete user', () => {
-        cy.criarUsuario(name, password, email, 'false').then((response) => {
-            let id = response.body._id
-            cy.request({
-                method: 'PUT',
-                url: `${apiUrl}/usuarios/${id}`,
-                body: {
-                    "nome": "Fulano da Silva",
-                    "email": faker.internet.email(),
-                    "password": "teste",
-                    "administrador": "true"
-                }
-            }).then((response) => {
-                expect(response.status).to.eq(200)
-                expect(response.body.message).to.eq('Registro alterado com sucesso')
-                cy.apagarUsuario("Fulano da Silva")
+    const user = createUser()
+
+    let userId
+
+    it('Updates a user successfully', () => {
+
+        const updatedUser = {
+            nome: faker.person.fullName(),
+            email: faker.internet.email(),
+            password: faker.internet.password(),
+            administrador: 'true'
+        }
+
+        cy.criarUsuario(user)
+            .then((response) => {
+
+                userId = response.body._id
+
+                return cy.request({
+                    method: 'PUT',
+                    url: `${apiUrl}/usuarios/${userId}`,
+                    body: updatedUser
+                })
             })
-        })
+            .then((response) => {
+
+                expect(response.status)
+                    .to.eq(200)
+
+                expect(response.body).to.have.property(
+                    'message',
+                    'Registro alterado com sucesso'
+                )
+
+                return cy.request({
+                    method: 'GET',
+                    url: `${apiUrl}/usuarios`,
+                    qs: {
+                        _id: userId
+                    }
+                })
+            })
+            .then((response) => {
+                expect(response.status)
+                    .to.eq(200)
+
+                expect(response.body.quantidade)
+                    .to.eq(1)
+
+                const userResponse =
+                    response.body.usuarios[0]
+
+                expect(userResponse._id)
+                    .to.eq(userId)
+
+                expect(userResponse)
+                    .to.include(updatedUser)
+            })
+    })
+    afterEach(() => {
+        if (userId) {
+            cy.deleteUserById(userId)
+        }
     })
 })
 //   Scenario: Deletar usuário com sucesso
@@ -237,30 +330,70 @@ describe('api usuarios tests PUT', () => {
 //     Then o status da resposta deve ser 200
 //     And a mensagem da resposta deve ser "Registro excluído com sucesso"
 describe('api usuarios tests DELETE', () => {
-    it('Delete user with non-existent ID', () => {
-        cy.criarUsuario(name, password, email, 'false').then((response) => {
-            let id = response.body._id
-            cy.request({
-                method: 'DELETE',
-                url: `${apiUrl}/usuarios/${id}`
-            }).then((response) => {
-                expect(response.status).to.eq(200)
-                expect(response.body).to.property("message", "Registro excluído com sucesso")
+
+    const user = createUser()
+
+    let userId
+    it('Delete user', () => {
+
+        cy.criarUsuario(user)
+            .then((response) => {
+
+                userId = response.body._id
+
+                return cy.request({
+                    method: 'DELETE',
+                    url: `${apiUrl}/usuarios/${userId}`
+                })
             })
+            .then((response) => {
+
+                expect(response.status)
+                    .to.eq(200)
+
+                expect(response.body)
+                    .to.property(
+                        "message",
+                        "Registro excluído com sucesso"
+                    )
+                return cy.searchUserById(userId)
+            })
+            .then((response) => {
+
+                expect(response.status)
+                    .to.eq(200)
+
+                expect(response.body.quantidade)
+                    .to.eq(0)
+
+                expect(response.body.usuarios)
+                    .to.be.an('array')
+                    .and.have.length(0)
+
+            })
+    })
+    it('Returns no deletion for an unknown user ID', () => {
+
+        const unknownUserId = 'unknownUser123'
+
+        cy.request({
+            method: 'DELETE',
+            url: `${apiUrl}/usuarios/${unknownUserId}`
+        }).then((response) => {
+
+            expect(response.status)
+                .to.eq(200)
+
+            expect(response.body).to.property(
+                "message",
+                "Nenhum registro excluído"
+            )
         })
     })
+
 })
 //   Scenario: Deletar usuário com ID inexistente
 //     When realizo uma requisição DELETE para excluir o usuario com o id "idInexistente123"
 //     Then o status da resposta deve ser 200
 //     And a mensagem da resposta deve ser "Nenhum registro excluído"
-it('Delete user with non-existent ID', () => {
-    cy.request({
-        method: 'DELETE',
-        url: `${apiUrl}/usuarios/23432fghhfg`
-    }).then((response) => {
-        expect(response.status).to.eq(200)
-        expect(response.body).to.property("message", "Nenhum registro excluído")
-    })
-})
 

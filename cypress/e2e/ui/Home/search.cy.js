@@ -3,18 +3,27 @@ import { createProduct } from '../../../factories/product.js'
 
 
 
-const user = createUser()
+const user = createUser({
+    administrator: 'true'
+})
 const product = createProduct()
+let productID
 
-let id
 describe('Search for a product', () => {
+    before(() => {
+        cy.criarUsuario(user)
+        cy.criarProduto(
+            user.email,
+            user.password,
+            product
+        ).then((response) => {
+            productID = response.body._id
+        })
+    })
     beforeEach(() => {
-        cy.criarUsuario(user.name, user.password, user.email, 'true')
-        cy.criarProduto(user.email, user.password, product.nome, product.preco, product.descricao, product.quantidade)
-            .then((response) => {
-                id = response.body._id
-            })
-        cy.loginSession(user.email, user.password)
+        cy.loginSession(
+            user.email,
+            user.password)
         cy.visit('/home')
         cy.contains('Serverest Store').should('be.exist')
     })
@@ -30,9 +39,10 @@ describe('Search for a product', () => {
             .find('.card-title')
             .should('have.text', product.nome)
     })
-})
-after(() => {
-    cy.excluirProduto(user.email, user.password, id)
-    cy.apagarUsuario(user.name)
 
+    after(() => {
+        cy.excluirProduto(user.email, user.password, productID)
+        cy.apagarUsuario(user.name)
+
+    })
 })

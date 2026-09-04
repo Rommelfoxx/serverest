@@ -1,3 +1,5 @@
+import { createUser } from '../../../factories/userFactory.js'
+
 // Feature: logar na aplicação
 //   Scenario: Logar na aplicação com usuario não administrador com sucesso
 //     Given que possua um usuario "vanderlan" senha "teste123" e email "van@gmail.com" se é administrador "false" cadastrado
@@ -28,62 +30,60 @@
 //       | vanaaaa@gmail.com |          | Password é obrigatório     |
 
 describe('login on the application', () => {
-    const user = {
-        name: 'vanderlan',
-        email: 'vanderlan@ig.com',
-        password: 'teste2'
-    }
-    //Given que possua um usuario "vanderlan" senha "teste123" e email "van@gmail.com" se é administrador "false" cadastrado
-    //And esteja na tela de login
+    const user = createUser()
     beforeEach(() => {
-        cy.apagarUsuario(user.name)
         cy.visit('/login');
         cy.contains('Login').should('be.exist')
-        cy.criarUsuario(user.name, user.password, user.email, 'false')
     })
+    context('With a registered user', () => {
+        before(() => {
+            cy.criarUsuario(user)
+        })
+        it('logs in successfully', () => {
 
-    it('Successful login', () => {
-        //When preenche email "van@gmail.com" e senha "teste123"
-        //And clica no bottão Entrar
-        cy.get('[data-testid="email"]').should("be.visible").type(user.email)
-        cy.get('[data-testid="senha"]').should('be.visible').type(user.password)
-        cy.get('[data-testid="entrar"]').should('be.visible').click()
-        //Then we are redirected to the to the home page
-        cy.contains('Serverest Store').should('be.exist')
-    })
-    it('incorrect email', () => {
-        //When fill with incorrect email and correct password
-        cy.get('[data-testid="email"]').should("be.visible").type('vams@asd.com.fr')
-        cy.get('[data-testid="senha"]').should('be.visible').type(user.password)
-        cy.get('[data-testid="entrar"]').should('be.visible').click()
-        //Then show the error message 
-        cy.contains('Email e/ou senha inválidos').should('be.exist')
-    })
-    it('incorrect password', () => {
-        //When fill with incorrect password and correct email
-        cy.get('[data-testid="email"]').should("be.visible").type(user.email)
-        cy.get('[data-testid="senha"]').should('be.visible').type('12345')
-        cy.get('[data-testid="entrar"]').should('be.visible').click()
-        //Then show the error message 
-        cy.contains('Email e/ou senha inválidos').should('be.exist')
-    })
-    it('fill empty password', () => {
-        //When fill with empty password and correct email
-        cy.get('[data-testid="email"]').should("be.visible").type(user.email)
-        cy.get('[data-testid="entrar"]').should('be.visible').click()
-        //Then show the error message 
-        cy.contains('Password é obrigatório').should('be.exist')
-    })
+            cy.fillLoginForm({ email: user.email, password: user.password })
+            //Then we are redirected to the to the home page
+            cy.location('pathname')
+                .should('eq', '/home')
+            cy.contains('Serverest Store')
+                .should('be.visible')
+        })
+        it('rejects an incorrect password', () => {
 
-    it('fill empty email', () => {
-        //When fill with empty email and correct password
-        cy.get('[data-testid="senha"]').should('be.visible').type(user.password)
-        cy.get('[data-testid="entrar"]').should('be.visible').click()
-        //Then show the error message 
-        cy.contains('Email é obrigatório').should('be.exist')
-    })
+            cy.fillLoginForm({ email: user.email, password: '12345' })
 
+            //Then show the error message 
+            cy.contains('Email e/ou senha inválidos')
+                .should('be.visible')
+        })
+
+    })
+    context('validation', () => {
+        it('rejects an incorrect email', () => {
+            cy.fillLoginForm({ email: 'vams@asd.com.fr', password: user.password })
+            //Then show the error message 
+            cy.contains('Email e/ou senha inválidos')
+                .should('be.visible')
+        })
+        it('rejects a fill empty password', () => {
+
+            cy.fillLoginForm({ email: user.email })
+
+            cy.contains('Password é obrigatório')
+                .should('be.visible')
+        })
+        it('rejects a fill empty email', () => {
+
+            cy.fillLoginForm({ password: user.password })
+
+            cy.contains('Email é obrigatório')
+                .should('be.visible')
+        })
+    })
     after(() => {
         cy.apagarUsuario(user.name)
     })
+
 })
+
+

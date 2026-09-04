@@ -36,7 +36,7 @@ jobs:
         run: npm ci
 
       - name: Executar testes de API
-        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/api/usuarios/usuarios.feature"
+        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/api/usuarios.cy.js"
 
       - name: Mesclar relatórios JSON
         if: always()
@@ -97,9 +97,9 @@ jobs:
           path: cypress/videos/
           retention-days: 7
 
-  # ─── Testes de UI (BDD/Cucumber) ─────────────────────────────────────────────
+  # ─── Testes de UI ─────────────────────────────────────────────────────────────
   test-ui:
-    name: Testes de UI (BDD Cucumber)
+    name: Testes de UI
     runs-on: ubuntu-latest
 
     steps:
@@ -124,15 +124,20 @@ jobs:
       - name: Verificar versão do Chrome disponível
         run: google-chrome --version
 
-      - name: Executar testes UI — Cadastrar Login
-        id: test-cadastrar-login
+      - name: Executar testes UI — Login
+        id: test-login
         continue-on-error: true
-        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/ui/cadastrarLogin/cadastrarLogin.feature"
+        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/ui/SignupLogin/login.cy.js"
 
-      - name: Executar testes UI — Logar
-        id: test-logar
+      - name: Executar testes UI — Cadastro
+        id: test-signup
         continue-on-error: true
-        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/ui/logar/login.feature"
+        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/ui/SignupLogin/signUp.cy.js"
+
+      - name: Executar testes UI — Busca (Home)
+        id: test-search
+        continue-on-error: true
+        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/ui/Home/search.cy.js"
 
       - name: Mesclar relatórios JSON
         if: always()
@@ -180,7 +185,7 @@ jobs:
       - name: Verificar resultado dos testes UI
         if: always()
         run: |
-          if [ "${{ steps.test-cadastrar-login.outcome }}" = "failure" ] || [ "${{ steps.test-logar.outcome }}" = "failure" ]; then
+          if [ "${{ steps.test-login.outcome }}" = "failure" ] || [ "${{ steps.test-signup.outcome }}" = "failure" ] || [ "${{ steps.test-search.outcome }}" = "failure" ]; then
             echo "Uma ou mais suítes de teste falharam."
             exit 1
           fi

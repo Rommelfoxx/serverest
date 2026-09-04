@@ -1,4 +1,4 @@
-
+import { createUser, creatUserAdmin } from '../../../factories/userFactory.js'
 
 
 
@@ -25,72 +25,87 @@
 
 describe('User Sign-up and Login', () => {
 
-    const user = {
-        name: 'vanderlan',
-        email: 'vanderlan@ig.com',
-        password: 'teste2'
-    }
-    // Given que o usuario "vanderlan" nao tenha sido criado anteriormente
-    // And esteja na tela de cadastro
+    let user
+    let userAdmin
+
     beforeEach(() => {
-        cy.apagarUsuario(user.name)
+
+        user = createUser()
+        userAdmin = creatUserAdmin()
+
         cy.visit('/cadastrarusuarios');
-        cy.contains('Cadastro').should('be.exist')
+        cy.contains('Cadastro')
+            .should('be.visible')
     });
-    it('User sign-up new user', () => {
+    context('sucessful registration', () => {
+        it('registers a new user successfully', () => {
+            //Sign-up User
+            cy.intercept('POST', '/login').as('login')
+            cy.intercept('POST', '/usuarios').as('criarUsuario')
 
-        //Sign-up User
-        cy.get('[data-testid="nome"').should('exist').type(user.name)
-        cy.get('[data-testid="email"').should('exist').type(user.email)
-        cy.get('[data-testid="password"').should('exist').type(user.password)
-        //And clica no bottão Cadastrar
-        cy.intercept('POST', 'https://serverest.dev/login').as('login')
-        cy.get('[data-testid="cadastrar"').should('be.visible').click()
-        //Then usuario "vanderlan" é criado com sucesso 
-        cy.intercept('POST', 'https://serverest.dev/usuarios').as('criarUsuario')
-        cy.wait('@criarUsuario')
-        cy.contains('Cadastro realizado com sucesso').should('be.exist')
-        cy.consultarUsuario(user.name)
-        cy.wait('@login')
-        //And somos direcionados para home 
-        cy.contains('Serverest Store').should('be.exist')
-    });
-    it('User sign-up new admin user', () => {
-        //Sign-up User
-        cy.get('[data-testid="nome"]').should('exist').type(user.name)
-        cy.get('[data-testid="email"]').should('exist').type(user.email)
-        cy.get('[data-testid="password"]').should('exist').type(user.senha)
-        cy.get('[data-testid="checkbox"]').should('exist').click()
-        //And clica no bottão Cadastrar
-        cy.intercept('POST', 'https://serverest.dev/login').as('login')
-        cy.get('[data-testid="cadastrar"').should('be.visible').click()
-        //Then usuario "vanderlan" é criado com sucesso 
-        cy.intercept('POST', 'https://serverest.dev/usuarios').as('criarUsuario')
-        cy.wait('@criarUsuario')
-        cy.contains('Cadastro realizado com sucesso').should('be.exist')
-        cy.consultarUsuario(user.name)
-        cy.wait('@login')
-        //And somos direcionados para home 
-        cy.contains('Bem Vindo vanderlan').should('be.exist')
-    });
+            cy.fillSignupForm(user)
 
-    it('should display signup password error ', () => {
-        cy.get('[data-testid="nome"').should('exist').type(user.name)
-        cy.get('[data-testid="email"').should('exist').type(user.email)
-        cy.get('[data-testid="cadastrar"').should('be.visible').click()
-        cy.contains("Password é obrigatório").should('be.exist')
-    });
-    it('should display signup name error ', () => {
-        cy.get('[data-testid="email"').should('exist').type(user.email)
-        cy.get('[data-testid="password"').should('exist').type(user.password)
-        cy.get('[data-testid="cadastrar"').should('be.visible').click()
-        cy.contains("Nome é obrigatório").should('be.exist')
-    });
-    it('should display signup email error', () => {
-        cy.get('[data-testid="nome"').should('exist').type(user.name)
-        cy.get('[data-testid="password"').should('exist').type(user.password)
-        cy.get('[data-testid="cadastrar"').should('be.visible').click()
-        cy.contains("Email é obrigatório").should('be.exist')
-    });
+            cy.wait('@criarUsuario')
 
+            cy.contains('Cadastro realizado com sucesso')
+                .should('be.visible')
+
+            cy.wait('@login')
+                .its('response.statusCode')
+                .should('eq', 200)
+
+            cy.contains('Serverest Store')
+                .should('be.visible')
+
+            cy.location('pathname').should('eq', '/home')
+        });
+        it('register a new administrator sucessfully', () => {
+
+            cy.intercept('POST', '/usuarios').as('criarUsuario')
+            cy.intercept('POST', '/login').as('login')
+
+            cy.fillSignupForm(userAdmin)
+
+            cy.wait('@criarUsuario')
+
+            cy.contains('Cadastro realizado com sucesso')
+                .should('be.visible')
+
+            cy.wait('@login')
+                .its('response.statusCode')
+                .should('eq', 200)
+
+            cy.contains(`Bem Vindo ${userAdmin.name}`)
+                .should('be.visible')
+
+            cy.location('pathname').should('eq', '/admin/home')
+        });
+        afterEach(() => {
+            cy.apagarUsuario(userAdmin.name)
+        })
+    })
+    context('form validation', () => {
+        it('shows an error when the password is missing', () => {
+
+            cy.fillSignupForm({ name: user.name, email: user.email })
+
+            cy.contains("Password é obrigatório")
+                .should('be.visible')
+        });
+        it('shows an error when the name is missing', () => {
+
+            cy.fillSignupForm({ password: user.password, email: user.email })
+
+            cy.contains("Nome é obrigatório")
+                .should('be.visible')
+        });
+        it('show an error when the password is missing', () => {
+
+            cy.fillSignupForm({ name: user.name, password: user.password })
+
+            cy.contains("Email é obrigatório")
+                .should('be.visible')
+        });
+    })
 });
+
