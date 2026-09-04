@@ -10,7 +10,7 @@ const createUser = (overrides = {}) => {
     }
 }
 
-const creatUserAdmin = (overrides = {}) => {
+const createUserAdmin = (overrides = {}) => {
 
     return {
         name: faker.person.firstName(),
@@ -23,5 +23,5 @@ const creatUserAdmin = (overrides = {}) => {
 }
 
 export default {
-    createUser, creatUserAdmin
+    createUser, createUserAdmin
 };

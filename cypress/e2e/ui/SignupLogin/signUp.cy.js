@@ -1,4 +1,4 @@
-import { createUser, creatUserAdmin } from '../../../factories/userFactory.js'
+import { createUser, createUserAdmin } from '../../../factories/userFactory.js'
 
 
 
@@ -31,7 +31,7 @@ describe('User Sign-up and Login', () => {
     beforeEach(() => {
 
         user = createUser()
-        userAdmin = creatUserAdmin()
+        userAdmin = createUserAdmin()
 
         cy.visit('/cadastrarusuarios');
         cy.contains('Cadastro')
