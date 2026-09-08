@@ -126,3 +126,13 @@ Cypress.Commands.add('fillLoginForm', (email, password) => {
 ### Nota: 8/10
 
 Every bug from the last two reviews is confirmed fixed, and the lint gate now actively prevents two of them from returning. What is left is duplication (the repeated form-filling) and one real data-safety gap (name-based cleanup on a shared public instance), not correctness bugs. Closing the four items above would make this a clean, defensible reference project for interviews.
+
+---
+
+## Follow-up — 2026-09-04 (same day)
+
+Fixed already: `signUp.cy.js`'s `afterEach` now deletes both `user.name` and `userAdmin.name`, closing the leak found in the previous entry. `eslint .` still clean.
+
+### Nota: 8.5/10
+
+No new bugs found. What remains is polish, not correctness: cleanup is still name-based rather than id-based across the UI specs, `commandsApi.js` still uses positional arguments while the UI commands use a single object, and `cypress.config.js`/`README.md`/the CI workflow are the same open items as before.

@@ -1,8 +1,6 @@
 import { createUser, createUserAdmin } from '../../../factories/userFactory.js'
 import { createProduct } from '../../../factories/product.js'
 
-
-
 const userAdmin = createUserAdmin()
 const user = createUser()
 const product = createProduct()
@@ -27,7 +25,6 @@ describe('Search for a product', () => {
         })
     })
     beforeEach(() => {
-
         cy.loginSession(user)
         cy.visit('/home')
         cy.contains('Serverest Store').should('be.exist')
@@ -48,15 +45,46 @@ describe('Search for a product', () => {
             .parent()
             .find('.card-title')
             .should('have.text', product.nome)
+
+        cy.get('[data-testid ="product-detail-link"]')
+            .parent()
+            .find('[class="card-subtitle mb-2 text-muted"]')
+            .should('have.text', '$ ' + product.preco)
+
+        cy.get('[data-testid="adicionarNaLista"]')
+            .should('be.visible')
+            .should('have.text', 'Adicionar a lista')
+
     })
 
-    after(() => {
+    it('Search for a non-existent product', () => {
 
-        cy.excluirProduto(userAdmin.email, userAdmin.password, productID)
+        cy.intercept('GET', 'https://serverest.dev/produtos*',
+            {
+                fixture: 'productTest.json'
+            }
+        ).as('consulta')
 
-        cy.apagarUsuario(user.name)
+        cy.get('[data-testid="pesquisar"]')
+            .should('be.enabled')
+            .type('Test')
 
-        cy.apagarUsuario(userAdmin.name)
+        cy.get('[data-testid="botaoPesquisar"]').click()
 
+        cy.wait('@consulta')
+
+        cy.contains('Nenhum produto foi encontrado')
+            .should('be.visible')
     })
 })
+
+after(() => {
+
+    cy.excluirProduto(userAdmin.email, userAdmin.password, productID)
+
+    cy.apagarUsuario(user.name)
+
+    cy.apagarUsuario(userAdmin.name)
+
+})
+
