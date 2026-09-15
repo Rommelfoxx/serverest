@@ -1,4 +1,4 @@
-const BASE_URL = Cypress.env('apiUrl')
+const BASE_URL = Cypress.expose('apiUrl')
 
 //login in the application
 Cypress.Commands.add('loginApi', (email, password) => {
