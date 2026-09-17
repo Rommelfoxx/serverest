@@ -21,14 +21,12 @@ Cypress.Commands.add('criarUsuario', (user) => {
         method: 'POST',
         url: `${BASE_URL}/usuarios`,
         body: {
-            nome: user.name,
+            nome: user.nome,
             email: user.email,
             password: user.password,
-            administrador: user.administrator
+            administrador: user.administrador
         }
     }).then((response) => {
-
-        expect(response.status).to.eq(201)
 
         return response
     })

@@ -2,10 +2,10 @@ import { faker } from "@faker-js/faker";
 
 const createUser = (overrides = {}) => {
     return {
-        name: faker.person.firstName(),
+        nome: faker.person.firstName(),
         email: faker.internet.email(),
         password: faker.internet.password(),
-        administrator: 'false',
+        administrador: 'false',
         ...overrides
     }
 }
@@ -13,10 +13,10 @@ const createUser = (overrides = {}) => {
 const createUserAdmin = (overrides = {}) => {
 
     return {
-        name: faker.person.firstName(),
+        nome: faker.person.firstName(),
         email: faker.internet.email(),
         password: faker.internet.password(),
-        administrator: 'true',
+        administrador: 'true',
         ...overrides
     }
 

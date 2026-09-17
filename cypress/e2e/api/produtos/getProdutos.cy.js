@@ -1,5 +1,5 @@
-import { createUserAdmin } from '../../factories/userFactory.js'
-import { createProduct, createInvalidProduct, createInconsistentProduct } from '../../factories/product.js'
+import { createUserAdmin } from '../../../factories/userFactory.js'
+import { createProduct, createInvalidProduct, createInconsistentProduct } from '../../../factories/product.js'
 
 
 

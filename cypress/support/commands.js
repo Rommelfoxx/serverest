@@ -29,13 +29,13 @@ Cypress.Commands.add('fillLoginForm', ({ email, password } = {}) => {
 
 })
 
-Cypress.Commands.add('fillSignupForm', ({ name, email, password, administrator } = {}) => {
+Cypress.Commands.add('fillSignupForm', ({ nome, email, password, administrador } = {}) => {
 
-    if (name) {
+    if (nome) {
 
         cy.get('[data-testid="nome"]')
             .should('be.visible')
-            .type(name)
+            .type(nome)
     }
 
     if (email) {
@@ -51,7 +51,7 @@ Cypress.Commands.add('fillSignupForm', ({ name, email, password, administrator }
             .should('be.visible')
             .type(password)
     }
-    if (administrator === 'true') {
+    if (administrador === 'true') {
 
         cy.get('[data-testid="checkbox"]')
             .should('be.visible')

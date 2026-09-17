@@ -1,9 +1,7 @@
 import { faker } from "@faker-js/faker";
-import { createUser } from '../../factories/userFactory.js'
+import { createUser } from '../../../factories/userFactory.js'
 
 const apiUrl = Cypress.expose('apiUrl')
-
-
 
 describe('api usuarios tests GET', () => {
     const user = createUser()

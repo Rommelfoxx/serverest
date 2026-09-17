@@ -52,25 +52,25 @@ describe('User Sign-up and Login', () => {
                 .its('response.statusCode')
                 .should('eq', 200)
 
-            cy.contains(`Bem Vindo ${userAdmin.name}`)
+            cy.contains(`Bem Vindo ${userAdmin.nome}`)
                 .should('be.visible')
 
             cy.location('pathname').should('eq', '/admin/home')
         });
         afterEach(() => {
-            cy.apagarUsuario(userAdmin.name)
-            cy.apagarUsuario(user.name)
+            cy.apagarUsuario(userAdmin.nome)
+            cy.apagarUsuario(user.nome)
         })
     })
     context('form validation', () => {
         it('shows an error when the password is missing', () => {
 
-            cy.fillSignupForm({ name: user.name, email: user.email })
+            cy.fillSignupForm({ nome: user.nome, email: user.email })
 
             cy.contains("Password é obrigatório")
                 .should('be.visible')
         });
-        it('shows an error when the name is missing', () => {
+        it('shows an error when the nome is missing', () => {
 
             cy.fillSignupForm({ password: user.password, email: user.email })
 
@@ -79,7 +79,7 @@ describe('User Sign-up and Login', () => {
         });
         it('show an error when the password is missing', () => {
 
-            cy.fillSignupForm({ name: user.name, password: user.password })
+            cy.fillSignupForm({ nome: user.nome, password: user.password })
 
             cy.contains("Email é obrigatório")
                 .should('be.visible')
