@@ -1,32 +1,32 @@
 
-import { createUser } from '../../../factories/userFactory.js'
+import { createUser, createUserInvalid } from '../../../factories/user.js'
 
 const apiUrl = Cypress.expose('apiUrl')
 
 describe('api usuarios tests GET', () => {
     const user = createUser()
+    const userInvalid = createUserInvalid()
 
     before(() => {
 
-        cy.criarUsuario(user)
+        return cy.criarUsuario(user)
             .then(({ status, body }) => {
                 expect(status).to.eq(201)
+
                 user._id = body._id
             })
     })
 
-    context('Sucessful searches', () => {
+    context('Successful searches', () => {
 
-        it('List all users', () => {
-            cy.request({
+        it('Returns all users', () => {
+            return cy.request({
                 method: 'GET',
                 url: `${apiUrl}/usuarios`
             }).then(({ status, body }) => {
-
                 const { usuarios, quantidade } = body
 
-                expect(status)
-                    .to.eq(200)
+                expect(status).to.eq(200)
 
                 expect(usuarios)
                     .to.be.an('array')
@@ -36,35 +36,74 @@ describe('api usuarios tests GET', () => {
                     .to.be.a('number')
                     .to.eq(usuarios.length)
 
-                usuarios.forEach((usuarios) => {
-                    expect(usuarios).to.include.all.keys(
+                usuarios.forEach((returnedUser) => {
+                    expect(returnedUser).to.include.all.keys(
                         'nome',
                         'email',
                         'password',
                         'administrador',
                         '_id'
                     )
-                    expect(usuarios.nome)
+                    expect(returnedUser.nome)
                         .to.be.a('string')
                         .to.not.be.empty
 
-                    expect(usuarios.email)
+                    expect(returnedUser.email)
                         .to.be.a('string')
                         .to.not.be.empty
 
-                    expect(usuarios.password)
+                    expect(returnedUser.password)
                         .to.be.a('string')
                         .to.not.be.empty
 
-                    expect(usuarios.administrador)
+                    expect(returnedUser.administrador)
                         .to.be.a('string')
                         .to.not.be.empty
 
-                    expect(usuarios._id)
+                    expect(returnedUser._id)
                         .to.be.a('string')
                         .to.not.be.empty
                 })
             })
+        })
+
+        it('Searches by name and email', () => {
+
+            return cy.request({
+                url: `${apiUrl}/usuarios`,
+                method: 'GET',
+                qs: {
+                    'nome': user.nome,
+                    'email': user.email
+                }
+            }).then(({ status, body }) => {
+                const { quantidade, usuarios } = body
+
+                expect(usuarios)
+                    .to.be.an('array')
+                    .and.not.be.empty
+
+                expect(quantidade)
+                    .to.be.a('number')
+                    .to.eq(usuarios.length)
+
+                expect(status).to.eq(200)
+
+                const returnedResult = usuarios.find(
+                    ({ _id }) => _id === user._id
+                )
+
+                expect(returnedResult).to.exist
+
+                expect(returnedResult).to.include({
+                    nome: user.nome,
+                    email: user.email,
+                    password: user.password,
+                    administrador: user.administrador,
+                    _id: user._id
+                })
+            })
+
         })
         //   Scenario: Buscar usuário por ID com sucesso
         //     Given que exista um usuario cadastrado
@@ -83,80 +122,102 @@ describe('api usuarios tests GET', () => {
         ]
 
         filters.forEach(({ field, value }) => {
-            it(`Retrieve user by ${field}`, () => {
-
+            it(`Retrieves a user by ${field}`, () => {
                 const expectedValue = value()
 
-                cy.request({
+                return cy.request({
                     method: 'GET',
                     url: `${apiUrl}/usuarios`,
                     qs: {
                         [field]: expectedValue
                     }
                 }).then(({ status, body }) => {
-
                     const { quantidade, usuarios } = body
 
-                    // const userResponse =
-                    //     response.body.usuarios[0]
+                    expect(status).to.eq(200)
 
-                    expect(status)
-                        .to.eq(200)
+                    expect(usuarios)
+                        .to.be.an('array')
+                        .and.not.be.empty
 
-                    if ([field] == '_id') {
-                        expect(quantidade)
-                            .to.eq(1)
+                    expect(quantidade)
+                        .to.be.an('number')
+                        .to.eq(usuarios.length)
 
-                        expect(usuarios)
-                            .to.have.length(1)
-                    }
 
                     usuarios.forEach((returnedValue) => {
                         expect(returnedValue[field])
                             .to.eq(expectedValue)
-
-                        const createdUser = usuarios.find(
-                            ({ _id }) => _id === user._id
-                        )
-                        expect(createdUser)
-                            .to.include({
-                                nome: user.nome,
-                                email: user.email,
-                                password: user.password,
-                                administrador: user.administrador
-                            })
                     })
+
+                    const createdUser = usuarios.find(
+                        ({ _id }) => _id === user._id
+                    )
+
+                    expect(
+                        createdUser,
+                        'The created user should appear in the results '
+                    ).to.exist
+
+                    expect(createdUser)
+                        .to.include({
+                            nome: user.nome,
+                            email: user.email,
+                            password: user.password,
+                            administrador: user.administrador
+                        })
+
+                    if (field === '_id') {
+                        expect(quantidade)
+                            .to.eq(1)
+                    }
                 })
             })
         })
     })
-    //   Scenario: Buscar usuário com ID inexistente
-    //     When realizo uma requisição GET para buscar o usuario com o id "idInexistente123"
-    //     Then o status da resposta deve ser 200
-    //     And a mensagem da resposta deve ser "Usuário não encontrado"
-    it('Returns no users for an unknown ID', () => {
-        cy.request({
-            method: 'GET',
-            url: `${apiUrl}/usuarios`,
-            qs: {
-                _id: '2335rgtfgfhgf'
-            }
-        }).then((response) => {
+    context('Search with nonExistent values', () => {
 
-            expect(response.status)
-                .to.eq(200)
+        const filters = [
+            { field: '_id', value: () => userInvalid._id },
+            { field: 'nome', value: () => userInvalid.nome },
+            { field: 'email', value: () => userInvalid.email },
+            { field: 'password', value: () => userInvalid.password },
+        ]
 
-            expect(response.body)
-                .to.property('quantidade', 0)
+        filters.forEach(({ field, value }) => {
+            it(`Return no User when search b y ${field}`, () => {
+                const expectedValue = value()
 
-            expect(response.body.usuarios)
-                .to.be.an('array')
-                .and.have.length(0)
+                return cy.request({
+                    url: `${apiUrl}/usuarios`,
+                    method: 'GET',
+                    qs: {
+                        [field]: expectedValue
+                    }
+                }).then(({ status, body }) => {
+                    const { quantidade, usuarios } = body
+                    expect(status).to.eq(200)
+
+                    expect(quantidade).to.eq(0)
+                    expect(usuarios)
+                        .to.be.an('array')
+                        .and.to.be.empty
+                })
+
+            })
+            //   Scenario: Buscar usuário com ID inexistente
+            //     When realizo uma requisição GET para buscar o usuario com o id "idInexistente123"
+            //     Then o status da resposta deve ser 200
+            //     And a mensagem da resposta deve ser "Usuário não encontrado"
+
         })
+
+
     })
     after(() => {
-        if (user._id) {
-            cy.deleteUserById(user._id)
+        if (!user._id) {
+            return
         }
+        return cy.deleteUserById(user._id)
     })
 })

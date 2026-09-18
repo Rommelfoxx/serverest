@@ -1,4 +1,4 @@
-import { createUser, createUserAdmin } from '../../../factories/userFactory.js'
+import { createUser, createUserAdmin } from '../../../factories/user.js'
 
 describe('User Sign-up and Login', () => {
 

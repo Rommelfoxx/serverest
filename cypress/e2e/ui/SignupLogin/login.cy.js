@@ -1,4 +1,4 @@
-import { createUser } from '../../../factories/userFactory.js'
+import { createUser } from '../../../factories/user.js'
 
 // Feature: logar na aplicação
 //   Scenario: Logar na aplicação com usuario não administrador com sucesso

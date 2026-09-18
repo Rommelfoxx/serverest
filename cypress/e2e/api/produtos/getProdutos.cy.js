@@ -1,4 +1,4 @@
-import { createUserAdmin } from '../../../factories/userFactory.js'
+import { createUserAdmin } from '../../../factories/user.js'
 import { createProduct, createInvalidProduct, createInconsistentProduct } from '../../../factories/product.js'
 
 

@@ -1,4 +1,4 @@
-import { createUser, createUserAdmin } from '../../../factories/userFactory.js'
+import { createUser, createUserAdmin } from '../../../factories/user.js'
 import { createProduct } from '../../../factories/product.js'
 
 const userAdmin = createUserAdmin()
