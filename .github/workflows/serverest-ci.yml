@@ -36,7 +36,7 @@ jobs:
         run: npm ci
 
       - name: Executar testes de API
-        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/api/usuarios.cy.js"
+        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/api/"
 
       - name: Mesclar relatórios JSON
         if: always()
