@@ -73,8 +73,8 @@ describe('api usuarios tests GET', () => {
                 url: `${apiUrl}/usuarios`,
                 method: 'GET',
                 qs: {
-                    'nome': user.nome,
-                    'email': user.email
+                    nome: user.nome,
+                    email: user.email
                 }
             }).then(({ status, body }) => {
                 const { quantidade, usuarios } = body
@@ -105,11 +105,6 @@ describe('api usuarios tests GET', () => {
             })
 
         })
-        //   Scenario: Buscar usuário por ID com sucesso
-        //     Given que exista um usuario cadastrado
-        //     When realizo uma requisição GET para buscar o usuario pelo id
-        //     Then o status da resposta deve ser 200
-        //     And o usuario retornado deve ter o mesmo email do usuario cadastrado
 
         const filters = [
 
@@ -203,16 +198,8 @@ describe('api usuarios tests GET', () => {
                         .to.be.an('array')
                         .and.to.be.empty
                 })
-
             })
-            //   Scenario: Buscar usuário com ID inexistente
-            //     When realizo uma requisição GET para buscar o usuario com o id "idInexistente123"
-            //     Then o status da resposta deve ser 200
-            //     And a mensagem da resposta deve ser "Usuário não encontrado"
-
         })
-
-
     })
     after(() => {
         if (!user._id) {
