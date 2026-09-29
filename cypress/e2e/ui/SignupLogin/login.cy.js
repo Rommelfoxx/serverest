@@ -59,19 +59,45 @@ describe('login on the application', () => {
 
     })
     context('validation', () => {
+
         it('rejects an incorrect email', () => {
             cy.fillLoginForm({ email: 'vams@asd.com.fr', password: user.password })
             //Then show the error message 
             cy.contains('Email e/ou senha inválidos')
                 .should('be.visible')
         })
-        it('rejects a fill empty password', () => {
 
-            cy.fillLoginForm({ email: user.email })
+        const field = [
+            {
+                field: 'email',
+                credentials:
+                {
+                    value: user.email
+                },
+                message: 'Password é obrigatório'
+            },
+            {
+                field: 'password',
+                credentials:
+                {
+                    value: user.password
+                },
+                message: 'Email é obrigatório'
+            }
+        ]
 
-            cy.contains('Password é obrigatório')
-                .should('be.visible')
+        field.forEach((validation) => {
+
+            it(`rejects a fill empty ${validation.field}`, () => {
+
+                cy.fillLoginForm(validation.credential)
+
+                cy.contains(validation.message)
+                    .should('be.visible')
+            })
+
         })
+
         it('rejects a fill empty email', () => {
 
             cy.fillLoginForm({ password: user.password })
