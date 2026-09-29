@@ -13,7 +13,7 @@ env:
 jobs:
   # ─── Testes de API ────────────────────────────────────────────────────────────
   test-api:
-    name: Testes de API (Usuários)
+    name: Testes de API
     runs-on: ubuntu-latest
 
     steps:
