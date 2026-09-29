@@ -2,19 +2,26 @@ import { createUser, createUserAdmin } from '../../../factories/user.js'
 
 describe('User Sign-up and Login', () => {
 
-    let user
-    let userAdmin
 
-    beforeEach(() => {
-
-        user = createUser()
-        userAdmin = createUserAdmin()
-
-        cy.visit('/cadastrarusuarios');
-        cy.contains('Cadastro')
-            .should('be.visible')
-    });
     context('sucessful registration', () => {
+
+        let user
+        let userAdmin
+
+        beforeEach(() => {
+            user = createUser()
+            userAdmin = createUserAdmin()
+
+            cy.visit('/cadastrarusuarios');
+
+            cy.contains('Cadastro')
+                .should('be.visible')
+        });
+
+        afterEach(() => {
+            cy.apagarUsuario(userAdmin.nome)
+            cy.apagarUsuario(user.nome)
+        })
         it('registers a new user successfully', () => {
             //Sign-up User
             cy.intercept('POST', '/login').as('login')
@@ -23,6 +30,8 @@ describe('User Sign-up and Login', () => {
             cy.fillSignupForm(user)
 
             cy.wait('@criarUsuario')
+                .its('response.statusCode')
+                .should('eq', 201)
 
             cy.contains('Cadastro realizado com sucesso')
                 .should('be.visible')
@@ -34,7 +43,8 @@ describe('User Sign-up and Login', () => {
             cy.contains('Serverest Store')
                 .should('be.visible')
 
-            cy.location('pathname').should('eq', '/home')
+            cy.location('pathname')
+                .should('eq', '/home')
         });
         it('register a new administrator sucessfully', () => {
 
@@ -44,6 +54,8 @@ describe('User Sign-up and Login', () => {
             cy.fillSignupForm(userAdmin)
 
             cy.wait('@criarUsuario')
+                .its('response.statusCode')
+                .should('eq', 201)
 
             cy.contains('Cadastro realizado com sucesso')
                 .should('be.visible')
@@ -55,35 +67,62 @@ describe('User Sign-up and Login', () => {
             cy.contains(`Bem Vindo ${userAdmin.nome}`)
                 .should('be.visible')
 
-            cy.location('pathname').should('eq', '/admin/home')
+            cy.location('pathname')
+                .should('eq', '/admin/home')
         });
-        afterEach(() => {
-            cy.apagarUsuario(userAdmin.nome)
-            cy.apagarUsuario(user.nome)
-        })
+
     })
     context('form validation', () => {
-        it('shows an error when the password is missing', () => {
 
-            cy.fillSignupForm({ nome: user.nome, email: user.email })
+        let user
 
-            cy.contains("Password é obrigatório")
+        beforeEach(() => {
+
+            user = createUser()
+
+            cy.visit('/cadastrarusuarios')
+
+            cy.contains('Cadastro')
                 .should('be.visible')
-        });
-        it('shows an error when the nome is missing', () => {
 
-            cy.fillSignupForm({ password: user.password, email: user.email })
+        })
 
-            cy.contains("Nome é obrigatório")
-                .should('be.visible')
-        });
-        it('show an error when the password is missing', () => {
+        const requiredFields = [
+            {
+                field: 'nome',
+                message: 'Nome é obrigatório'
+            },
+            {
+                field: 'email',
+                message: 'Email é obrigatório'
+            },
+            {
+                field: 'password',
+                message: 'Password é obrigatório'
+            }
+        ]
+        requiredFields.forEach((validation) => {
 
-            cy.fillSignupForm({ nome: user.nome, password: user.password })
+            it(`shows an error when the ${validation.field} is missing`, () => {
 
-            cy.contains("Email é obrigatório")
-                .should('be.visible')
-        });
+                const formData = {
+
+                    nome: user.nome,
+                    email: user.email,
+                    password: user.password
+                }
+
+                delete formData[validation.field]
+
+                cy.fillSignupForm(formData)
+
+                cy.contains(validation.message)
+                    .should('be.visible')
+            });
+        })
+
+
     })
+
 });
 

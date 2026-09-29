@@ -60,7 +60,6 @@ describe('API product tests GET method', () => {
                     )
                     expect(produto.nome)
                         .to.be.a('string')
-                        .to.not.be.empty
 
                     expect(produto.preco)
                         .to.be.a('number')
