@@ -13,7 +13,7 @@ env:
 jobs:
   # ─── Testes de API ────────────────────────────────────────────────────────────
   test-api:
-    name: Testes de API (Usuários)
+    name: Testes de API
     runs-on: ubuntu-latest
 
     steps:
@@ -35,8 +35,11 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Executar testes de API
-        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/api/"
+      - name: Executar testes de API (usuarios)
+        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/api/usuarios"
+
+      - name: Executar testes de API (produtos)
+        run: npx cypress run --browser chrome --headless --spec "cypress/e2e/api/usuarios"
 
       - name: Mesclar relatórios JSON
         if: always()
