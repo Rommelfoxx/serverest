@@ -31,14 +31,19 @@ import { createUser } from '../../../factories/user.js'
 
 describe('login on the application', () => {
     const user = createUser()
+
     beforeEach(() => {
         cy.visit('/login');
         cy.contains('Login').should('be.exist')
     })
-    context('With a registered user', () => {
-        before(() => {
-            cy.criarUsuario(user)
+    before(() => {
+        return cy.criarUsuario(user).then(({ status, body }) => {
+            expect(status).to.eq(201)
+            user._id = body._id
         })
+    })
+    context('With a registered user', () => {
+
         it('logs in successfully', () => {
 
             cy.fillLoginForm({ email: user.email, password: user.password })
@@ -48,66 +53,60 @@ describe('login on the application', () => {
             cy.contains('Serverest Store')
                 .should('be.visible')
         })
-        it('rejects an incorrect password', () => {
-
-            cy.fillLoginForm({ email: user.email, password: '12345' })
-
-            //Then show the error message 
-            cy.contains('Email e/ou senha inválidos')
-                .should('be.visible')
-        })
-
     })
-    context('validation', () => {
-
-        it('rejects an incorrect email', () => {
-            cy.fillLoginForm({ email: 'vams@asd.com.fr', password: user.password })
-            //Then show the error message 
-            cy.contains('Email e/ou senha inválidos')
-                .should('be.visible')
-        })
-
-        const field = [
+    context('negative validation', () => {
+        const validations = [
             {
-                field: 'email',
+                title: 'incorrect password',
                 credentials:
                 {
-                    value: user.email
+                    email: user.email,
+                    password: '12345'
+                },
+                message: 'Email e/ou senha inválidos'
+            },
+            {
+                title: 'incorrect email',
+                credentials:
+                {
+                    email: 'vams@asd.com.fr',
+                    password: user.password
+                },
+                message: 'Email e/ou senha inválidos'
+            },
+            {
+                title: 'empty password',
+                credentials:
+                {
+                    email: user.email
                 },
                 message: 'Password é obrigatório'
             },
             {
-                field: 'password',
+                title: 'empty email',
                 credentials:
                 {
-                    value: user.password
+                    password: user.password
                 },
                 message: 'Email é obrigatório'
             }
         ]
+        validations.forEach((validation) => {
+            it(`rejects ${validation.title}`, () => {
 
-        field.forEach((validation) => {
-
-            it(`rejects a fill empty ${validation.field}`, () => {
-
-                cy.fillLoginForm(validation.credential)
+                cy.fillLoginForm(validation.credentials)
 
                 cy.contains(validation.message)
                     .should('be.visible')
             })
-
-        })
-
-        it('rejects a fill empty email', () => {
-
-            cy.fillLoginForm({ password: user.password })
-
-            cy.contains('Email é obrigatório')
-                .should('be.visible')
         })
     })
     after(() => {
-        cy.apagarUsuario(user.name)
+
+        if (user._id) {
+            return cy.deleteUserById(user._id)
+        }
+
     })
 
 })
